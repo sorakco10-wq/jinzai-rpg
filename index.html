@@ -291,10 +291,55 @@ body{
 .res-ttl{font-family:'DotGothic16',monospace;font-size:12px;font-weight:700;margin-bottom:5px}
 .res-body{font-size:13px;line-height:1.75}
 /* 詳細解説 */
-.det-accord{margin-top:8px;border:1px solid rgba(102,85,255,.25);border-radius:4px;overflow:hidden}
-.det-hd{background:rgba(102,85,255,.1);padding:8px 12px;font-family:'DotGothic16',monospace;font-size:8px;color:var(--accent2);cursor:pointer;display:flex;justify-content:space-between;-webkit-tap-highlight-color:transparent}
-.det-bd{display:none;padding:10px 12px;font-size:11px;color:var(--text2);line-height:1.85;border-top:1px solid rgba(102,85,255,.2)}
-.det-bd.open{display:block}
+.det-accord{
+  margin-top:12px;
+  border:2px solid rgba(0,221,200,.45);
+  border-radius:10px;
+  overflow:hidden;
+  background:linear-gradient(135deg,rgba(0,221,200,.06),rgba(102,85,255,.06));
+  box-shadow:0 0 14px rgba(0,221,200,.15);
+}
+.det-hd{
+  background:linear-gradient(90deg,rgba(0,221,200,.18),rgba(102,85,255,.15));
+  padding:13px 16px;
+  font-family:'DotGothic16',monospace;
+  font-size:12px;
+  font-weight:700;
+  color:var(--accent2);
+  cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  -webkit-tap-highlight-color:transparent;
+  position:relative;
+}
+.det-hd::before{
+  content:'';
+  position:absolute;
+  left:0;top:0;bottom:0;
+  width:4px;
+  background:var(--accent2);
+}
+.det-hd span:last-child{
+  font-size:14px;
+  background:rgba(0,221,200,.2);
+  border-radius:50%;
+  width:26px;height:26px;
+  display:flex;align-items:center;justify-content:center;
+}
+.det-bd{
+  display:none;
+  padding:14px 16px;
+  font-size:14px;
+  color:var(--text);
+  line-height:2.0;
+  border-top:2px solid rgba(0,221,200,.3);
+  background:rgba(0,0,30,.4);
+}
+.det-bd.open{display:block;animation:detOpen .25s ease-out}
+@keyframes detOpen{0%{opacity:0;transform:translateY(-6px)}100%{opacity:1;transform:translateY(0)}}
+/* 解説内の年度・重要マークを強調 */
+.det-bd .hl-year{color:var(--gold);font-weight:700}
 
 /* 次へボタン（大きく！） */
 .next-btn{
@@ -432,7 +477,8 @@ body{
 @keyframes enemyHuge{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
 
 /* BGMコントロール */
-.audio-ctrl{position:fixed;top:10px;right:10px;z-index:100;display:flex;gap:4px}
+.audio-ctrl{position:fixed;top:45%;right:6px;transform:translateY(-50%);z-index:90;display:flex;flex-direction:column;gap:6px;opacity:.75}
+.audio-ctrl:active{opacity:1}
 .audio-btn{
   width:32px;height:32px;border-radius:50%;
   background:rgba(0,0,20,.8);border:1px solid rgba(68,68,255,.4);
@@ -2403,7 +2449,8 @@ function updateBossHP(q){
 }
 
 function showResult(q,correct){
-  const det=q.det?`<div class="det-accord"><div class="det-hd" onclick="this.nextElementSibling.classList.toggle('open');this.lastElementChild.textContent=this.nextElementSibling.classList.contains('open')?'▲':'▼'">📚 詳細解説・関連過去問 <span>▼</span></div><div class="det-bd">${q.det}</div></div>`:'';
+  const detText=(q.det||'').replace(/【([^】]+)】/g,'<span class="hl-year">【$1】</span>');
+  const det=q.det?`<div class="det-accord"><div class="det-hd" onclick="this.nextElementSibling.classList.toggle('open');this.lastElementChild.textContent=this.nextElementSibling.classList.contains('open')?'▲':'▼'"><span>📚 詳細解説・関連過去問を見る</span> <span>▼</span></div><div class="det-bd">${detText}</div></div>`:'';
   
   // 複数選択・選択問題の場合は凡例を表示
   const isMulti = q.t==='sel'||q.t==='multi';
@@ -2833,7 +2880,7 @@ function resumeGame(){
   const nb=$('nextBtn');if(nb)nb.style.display='none';
   
   // 再開メッセージ
-  showCheckpointBanner('📖 セーブデータから再開しました！');
+  showCheckpointBanner('▶ 続きから再開！がんばろう！');
   
   initAudio();
   startBGM();
@@ -2892,7 +2939,7 @@ function showPauseMenu(){
   const menu = document.createElement('div');
   menu.id = 'pauseMenu';
   menu.style.cssText = `
-    position:fixed;inset:0;background:rgba(0,0,20,.85);z-index:200;
+    position:fixed;inset:0;background:rgba(0,0,20,.9);z-index:200;
     display:flex;align-items:center;justify-content:center;
     backdrop-filter:blur(4px);
   `;
@@ -2900,15 +2947,17 @@ function showPauseMenu(){
   const cfg = DIFF_CONFIG[currentDiff] || DIFF_CONFIG.normal;
   menu.innerHTML = `
   <div style="background:var(--dqbg);border:2px solid var(--dqborder);border-radius:10px;padding:24px 20px;max-width:320px;width:90%;text-align:center">
-    <div style="font-family:'DotGothic16',monospace;font-size:16px;color:var(--gold);margin-bottom:6px">⏸ PAUSE</div>
-    <div style="font-family:'DotGothic16',monospace;font-size:9px;color:var(--text2);margin-bottom:20px">
+    <div style="font-family:'DotGothic16',monospace;font-size:16px;color:var(--gold);margin-bottom:8px">💾 セーブして中断</div>
+    <div style="font-family:'DotGothic16',monospace;font-size:9px;color:var(--text2);margin-bottom:8px;line-height:1.8">
       ${cfg.icon}${cfg.label} ${S.randomIdx}/${targetCount}問<br>
       正解:${S.correct}問 HP:${S.hp}/${S.maxHp}
     </div>
+    <div style="font-family:'DotGothic16',monospace;font-size:9px;color:var(--accent2);margin-bottom:20px;line-height:1.8">
+      ここまでの進捗をセーブして<br>ゲームを終了しますか？<br>次回「途中から再開」できます。
+    </div>
     <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="dq-btn dq-btn-gold" onclick="saveAndQuit()" style="max-width:100%;margin:0"><span>💾 セーブして終了する</span></button>
       <button class="dq-btn" onclick="closePause()" style="max-width:100%;margin:0"><span>▶ ゲームに戻る</span></button>
-      <button class="dq-btn" onclick="saveAndPause()" style="max-width:100%;margin:0;border-color:rgba(0,221,136,.4)"><span>💾 セーブして中断</span></button>
-      <button class="dq-btn" onclick="quitGame()" style="max-width:100%;margin:0;border-color:rgba(255,51,85,.3)"><span>🚪 タイトルに戻る</span></button>
     </div>
   </div>`;
   
@@ -2916,23 +2965,38 @@ function showPauseMenu(){
   sfxPageTurn();
 }
 
+function saveAndQuit(){
+  saveGame();
+  closePause();
+  stopBGM();
+  // セーブ完了画面を表示してからタイトルへ
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,16,.97);z-index:300;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  `;
+  overlay.innerHTML = `
+    <div style="font-size:56px">💾</div>
+    <div style="font-family:'DotGothic16',monospace;font-size:16px;color:var(--green)">セーブしました！</div>
+    <div style="font-family:'DotGothic16',monospace;font-size:10px;color:var(--text2);text-align:center;line-height:1.9">
+      次回ゲームを開いたときに<br>「途中から再開」できます。<br>おつかれさまでした！
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  sfxCorrect();
+  
+  // 2秒後にタイトル画面へ戻る
+  setTimeout(()=>{
+    location.reload();
+  }, 2200);
+}
+
 function closePause(){
   const m = document.getElementById('pauseMenu');
   if(m) m.remove();
 }
 
-function saveAndPause(){
-  saveGame();
-  closePause();
-  showCheckpointBanner('💾 セーブしました！次回また続きから！');
-  sfxCorrect();
-}
 
-function quitGame(){
-  closePause();
-  clearSave();
-  location.reload();
-}
 
 // ===== チェックポイントバナー =====
 function showCheckpointBanner(msg){
@@ -3397,6 +3461,63 @@ if('serviceWorker' in navigator){
     }).catch(()=>{});
   });
 }
+
+// ===== 起動時の再開確認 =====
+function checkResumeOnBoot(){
+  const save = loadSave();
+  if(!save) return;
+  
+  const diff = DIFF_CONFIG[save.diff] || DIFF_CONFIG.normal;
+  const ch = CHARS[save.playerCI] || CHARS[0];
+  const elapsed = Math.round((Date.now()-save.ts)/60000);
+  const timeStr = elapsed < 1 ? 'さっき' : elapsed < 60 ? `${elapsed}分前` : elapsed < 1440 ? `${Math.round(elapsed/60)}時間前` : `${Math.round(elapsed/1440)}日前`;
+  
+  const overlay = document.createElement('div');
+  overlay.id = 'resumePrompt';
+  overlay.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,16,.95);z-index:500;
+    display:flex;align-items:center;justify-content:center;
+    backdrop-filter:blur(6px);
+  `;
+  overlay.innerHTML = `
+  <div style="background:var(--dqbg);border:2px solid rgba(255,204,0,.5);border-radius:12px;padding:26px 22px;max-width:340px;width:90%;text-align:center;box-shadow:0 0 30px rgba(255,204,0,.2)">
+    <div style="font-size:48px;margin-bottom:8px">💾</div>
+    <div style="font-family:'DotGothic16',monospace;font-size:16px;color:var(--gold);margin-bottom:12px">途中から始めますか？</div>
+    <div style="background:rgba(255,204,0,.08);border:1px solid rgba(255,204,0,.25);border-radius:8px;padding:12px;margin-bottom:18px">
+      <div style="font-family:'DotGothic16',monospace;font-size:10px;color:var(--text);line-height:2.0">
+        ${ch.e} ${save.playerName}<br>
+        ${diff.icon} ${diff.label}モード ${save.randomIdx}/${diff.count}問<br>
+        正解: ${save.correct}問 ／ HP: ${save.hp}/${save.maxHp}<br>
+        <span style="color:var(--text2);font-size:8px">（${timeStr}のセーブデータ）</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="dq-btn dq-btn-gold" onclick="bootResume()" style="max-width:100%;margin:0"><span>▶ 続きから始める</span></button>
+      <button class="dq-btn" onclick="bootNewGame()" style="max-width:100%;margin:0"><span>🆕 最初から始める</span></button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+function bootResume(){
+  const p = document.getElementById('resumePrompt');
+  if(p) p.remove();
+  initAudio();
+  resumeGame();
+}
+
+function bootNewGame(){
+  const p = document.getElementById('resumePrompt');
+  if(p) p.remove();
+  clearSave();
+  // イントロ画面のまま（通常フロー）
+}
+
+// ページ読み込み時に再開チェック
+window.addEventListener('load', ()=>{
+  setTimeout(checkResumeOnBoot, 400);
+});
+
 </script>
 </body>
 </html>
